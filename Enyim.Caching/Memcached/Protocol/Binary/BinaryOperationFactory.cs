@@ -9,9 +9,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	/// </summary>
 	public class BinaryOperationFactory : IOperationFactory
 	{
-        private readonly ILogger _logger;
+        private readonly ILog _logger;
 
-        public BinaryOperationFactory(ILogger logger)
+        public BinaryOperationFactory(ILog logger)
         {
             _logger = logger;
         }

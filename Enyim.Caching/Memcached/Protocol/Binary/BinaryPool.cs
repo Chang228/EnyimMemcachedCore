@@ -17,9 +17,9 @@ namespace Enyim.Caching.Memcached.Protocol.Binary
 	{
 		ISaslAuthenticationProvider authenticationProvider;
 		IMemcachedClientConfiguration configuration;
-        private readonly ILogger _logger;
+        private readonly ILog _logger;
 
-		public BinaryPool(IMemcachedClientConfiguration configuration, ILogger logger)
+		public BinaryPool(IMemcachedClientConfiguration configuration, ILog logger)
 			: base(configuration, new BinaryOperationFactory(logger), logger)
 		{
 			this.authenticationProvider = GetProvider(configuration);

@@ -19,7 +19,7 @@ namespace Enyim.Caching.Memcached
     [DebuggerDisplay("[ Address: {endpoint}, IsAlive = {IsAlive} ]")]
     public partial class PooledSocket : IDisposable
     {
-        private readonly ILogger _logger;
+        private readonly ILog _logger;
 
         private bool isAlive;
         private Socket socket;
@@ -28,7 +28,7 @@ namespace Enyim.Caching.Memcached
         private Stream inputStream;
         private AsyncSocketHelper helper;
 
-        public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout, ILogger logger)
+        public PooledSocket(EndPoint endpoint, TimeSpan connectionTimeout, TimeSpan receiveTimeout, ILog logger)
         {
             _logger = logger;
 
@@ -80,7 +80,7 @@ namespace Enyim.Caching.Memcached
                 {
                     throw new ArgumentException(String.Format("Could not resolve host '{0}'.", host));
                 }
-                _logger.LogDebug($"Resolved '{host}' to '{address}'");
+                _logger.Debug($"Resolved '{host}' to '{address}'");
                 endpoint = new IPEndPoint(address, dnsEndPoint.Port);
             }
 
@@ -138,19 +138,19 @@ namespace Enyim.Caching.Memcached
 
             if (available > 0)
             {
-                if (_logger.IsEnabled(LogLevel.Warning))
-                    _logger.LogWarning("Socket bound to {0} has {1} unread data! This is probably a bug in the code. InstanceID was {2}.", this.socket.RemoteEndPoint, available, this.InstanceId);
+                if (_logger.IsWarnEnabled)
+                    _logger.WarnFormat("Socket bound to {0} has {1} unread data! This is probably a bug in the code. InstanceID was {2}.", this.socket.RemoteEndPoint, available, this.InstanceId);
 
                 byte[] data = new byte[available];
 
                 this.Read(data, 0, available);
 
-                if (_logger.IsEnabled(LogLevel.Warning))
-                    _logger.LogWarning(Encoding.ASCII.GetString(data));
+                if (_logger.IsWarnEnabled)
+                    _logger.Warn(Encoding.ASCII.GetString(data));
             }
 
-            if (_logger.IsEnabled(LogLevel.Debug))
-                _logger.LogDebug("Socket {0} was reset", this.InstanceId);
+            if (_logger.IsDebugEnabled)
+                _logger.DebugFormat("Socket {0} was reset", this.InstanceId);
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Enyim.Caching.Memcached
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(nameof(PooledSocket), e);
+                    _logger.Error(nameof(PooledSocket), e);
                 }
             }
             else

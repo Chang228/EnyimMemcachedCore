@@ -23,7 +23,12 @@ namespace Enyim.Caching
 			this.writer = new StreamWriter(new FileStream(logPath, FileMode.OpenOrCreate));
 		}
 
-		ILog ILogFactory.GetLogger(string name)
+        ILog ILogFactory.GetLogger<T>()
+        {
+            return new TextWriterLog(typeof(T).FullName, this.writer);
+        }
+
+        ILog ILogFactory.GetLogger(string name)
 		{
 			return new TextWriterLog(name, this.writer);
 		}
@@ -32,7 +37,7 @@ namespace Enyim.Caching
 		{
 			return new TextWriterLog(type.FullName, this.writer);
 		}
-	}
+    }
 
 	public class ConsoleLogFactory : ILogFactory
 	{
@@ -44,8 +49,13 @@ namespace Enyim.Caching
 		ILog ILogFactory.GetLogger(Type type)
 		{
 			return new TextWriterLog(type.FullName, Console.Out);
-		}
-	}
+        }
+
+        ILog ILogFactory.GetLogger<T>()
+        {
+            return new TextWriterLog(typeof(T).FullName, Console.Out);
+        }
+    }
 
 	#region [ ILog implementation          ]
 

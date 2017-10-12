@@ -19,8 +19,7 @@ namespace Microsoft.AspNetCore.Builder
                 Console.WriteLine("EnyimMemcached Started.");
             } catch (Exception ex)
             {
-                app.ApplicationServices.GetService<ILogger<IMemcachedClient>>()
-                    .LogError(new EventId(), ex, "EnyimMemcached Failed.");
+                throw ex;
             }
             return app;
         }

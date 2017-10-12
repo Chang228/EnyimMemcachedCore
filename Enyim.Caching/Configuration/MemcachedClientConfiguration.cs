@@ -18,13 +18,18 @@ namespace Enyim.Caching.Configuration
         private Type nodeLocator;
         private ITranscoder _transcoder;
         private IMemcachedKeyTransformer keyTransformer;
-        private ILogger<MemcachedClientConfiguration> _logger;
+        private ILog _logger;
 
+        public MemcachedClientConfiguration(
+            IOptions<MemcachedClientOptions> optionsAccessor):this(new NullLoggerFactory(), optionsAccessor)
+        {
+           
+        }
         /// <summary>
         /// Initializes a new instance of the <see cref="T:MemcachedClientConfiguration"/> class.
         /// </summary>
         public MemcachedClientConfiguration(
-            ILoggerFactory loggerFactory,
+            ILogFactory loggerFactory,
             IOptions<MemcachedClientOptions> optionsAccessor)
         {
             if (optionsAccessor == null)
@@ -32,7 +37,7 @@ namespace Enyim.Caching.Configuration
                 throw new ArgumentNullException(nameof(optionsAccessor));
             }
 
-            _logger = loggerFactory.CreateLogger<MemcachedClientConfiguration>();
+            _logger = loggerFactory.GetLogger<MemcachedClientConfiguration>();
 
             var options = optionsAccessor.Value;
             Servers = new List<EndPoint>();
@@ -58,24 +63,24 @@ namespace Enyim.Caching.Configuration
                     var authenticationType = Type.GetType(options.Authentication.Type);
                     if (authenticationType != null)
                     {
-                        _logger.LogDebug($"Authentication type is {authenticationType}.");
+                        _logger.Debug($"Authentication type is {authenticationType}.");
 
                         Authentication = new AuthenticationConfiguration();
                         Authentication.Type = authenticationType;
                         foreach (var parameter in options.Authentication.Parameters)
                         {
                             Authentication.Parameters[parameter.Key] = parameter.Value;
-                            _logger.LogDebug($"Authentication {parameter.Key} is '{parameter.Value}'.");
+                            _logger.Debug($"Authentication {parameter.Key} is '{parameter.Value}'.");
                         }
                     }
                     else
                     {
-                        _logger.LogError($"Unable to load authentication type {options.Authentication.Type}.");
+                        _logger.Error($"Unable to load authentication type {options.Authentication.Type}.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(new EventId(), ex, $"Unable to load authentication type {options.Authentication.Type}.");
+                    _logger.Error($"Unable to load authentication type {options.Authentication.Type}.", ex);
                 }
             }
 
@@ -87,12 +92,12 @@ namespace Enyim.Caching.Configuration
                     if (keyTransformerType != null)
                     {
                         KeyTransformer = Activator.CreateInstance(keyTransformerType) as IMemcachedKeyTransformer;
-                        _logger.LogDebug($"Use '{options.KeyTransformer}' KeyTransformer");
+                        _logger.Debug($"Use '{options.KeyTransformer}' KeyTransformer");
                     }
                 }
                 catch(Exception ex)
                 {
-                    _logger.LogError(new EventId(), ex, $"Unable to load '{options.KeyTransformer}' KeyTransformer");
+                    _logger.Error($"Unable to load '{options.KeyTransformer}' KeyTransformer", ex);
                 }                
             }
 

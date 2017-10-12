@@ -16,6 +16,11 @@ namespace Enyim.Caching
 		{
 			return NullLogger.Instance;
 		}
+        
+        ILog ILogFactory.GetLogger<T>()
+        {
+            return NullLogger.Instance;
+        }
 
 		#region [ NullLogger                   ]
 
