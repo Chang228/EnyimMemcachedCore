@@ -16,15 +16,18 @@ namespace Enyim.Caching
         object Get(string key);
 		T Get<T>(string key);
 		IDictionary<string, object> Get(IEnumerable<string> keys);
+        IDictionary<string, T> Get<T>(IEnumerable<string> keys);
 
-		bool TryGet(string key, out object value);
-		bool TryGetWithCas(string key, out CasResult<object> value);
+        bool TryGet(string key, out object value);
+        bool TryGetWithCas<T>(string key, out CasResult<T> value);
 
 		CasResult<object> GetWithCas(string key);
 		CasResult<T> GetWithCas<T>(string key);
 		IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys);
+        IDictionary<string, CasResult<T>> GetWithCas<T>(IEnumerable<string> keys);
 
-		bool Append(string key, ArraySegment<byte> data);
+
+        bool Append(string key, ArraySegment<byte> data);
 		CasResult<bool> Append(string key, ulong cas, ArraySegment<byte> data);
 
 		bool Prepend(string key, ArraySegment<byte> data);

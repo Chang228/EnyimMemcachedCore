@@ -216,7 +216,7 @@ namespace Enyim.Caching
             throw new NotImplementedException();
         }
 
-        public bool TryGetWithCas(string key, out CasResult<object> value)
+        public bool TryGetWithCas<T>(string key, out CasResult<T> value)
         {
             throw new NotImplementedException();
         }
@@ -227,6 +227,16 @@ namespace Enyim.Caching
 
         public async Task AddAsync(string key, object value, int cacheSeconds)
         {
+        }
+
+        public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDictionary<string, CasResult<T>> GetWithCas<T>(IEnumerable<string> keys)
+        {
+            throw new NotImplementedException();
         }
     }
 }

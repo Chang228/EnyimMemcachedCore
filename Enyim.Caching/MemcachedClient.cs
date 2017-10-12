@@ -42,6 +42,11 @@ namespace Enyim.Caching
         protected IMemcachedKeyTransformer KeyTransformer { get { return this.keyTransformer; } }
         protected ITranscoder Transcoder { get { return this.transcoder; } }
 
+        public MemcachedClient( IMemcachedClientConfiguration configuration):this(new NullLoggerFactory(), configuration)
+        {
+
+        }
+
         public MemcachedClient(
             ILogFactory loggerFactor,
             IMemcachedClientConfiguration configuration)
@@ -252,34 +257,40 @@ namespace Enyim.Caching
         [Obsolete]
         public CasResult<T> GetWithCas<T>(string key)
         {
-            CasResult<object> tmp;
+            CasResult<T> tmp;
 
-            return this.TryGetWithCas(key, out tmp)
-                    ? new CasResult<T> { Cas = tmp.Cas, Result = (T)tmp.Result }
-                    : new CasResult<T> { Cas = tmp.Cas, Result = default(T) };
+            return this.TryGetWithCas<T>(key, out tmp)
+                    ? new CasResult<T>
+                    {
+                        Cas = tmp.Cas,
+                        Result = tmp.Result
+                    }
+                    : new CasResult<T>
+                    {
+                        Cas = tmp.Cas,
+                        Result = default(T)
+                    };
         }
-
-        [Obsolete]
-        public bool TryGetWithCas(string key, out CasResult<object> value)
+        
+        public bool TryGetWithCas<T>(string key, out CasResult<T> value)
         {
-            object tmp;
+            T tmp;
             ulong cas;
 
             var retval = this.PerformTryGet(key, out cas, out tmp);
 
-            value = new CasResult<object> { Cas = cas, Result = tmp };
+            value = new CasResult<T> { Cas = cas, Result = tmp };
 
             return retval.Success;
         }
 
-        protected virtual IGetOperationResult PerformTryGet(string key, out ulong cas, out object value)
+        protected virtual IGetOperationResult PerformTryGet<T>(string key, out ulong cas, out T value)
         {
             var hashedKey = this.keyTransformer.Transform(key);
             var node = this.pool.Locate(hashedKey);
             var result = GetOperationResultFactory.Create();
 
             cas = 0;
-            value = null;
 
             if (node != null)
             {
@@ -288,7 +299,7 @@ namespace Enyim.Caching
 
                 if (commandResult.Success)
                 {
-                    result.Value = value = this.transcoder.Deserialize(command.Result);
+                    result.Value = value = this.transcoder.Deserialize<T>(command.Result);
                     result.Cas = cas = command.CasValue;
 
                     result.Pass();
@@ -296,11 +307,15 @@ namespace Enyim.Caching
                 }
                 else
                 {
+                    value = default(T);
                     commandResult.Combine(result);
                     return result;
                 }
             }
-
+            else
+            {
+                value = default(T);
+            }
             result.Value = value;
             result.Cas = cas;
 
@@ -939,6 +954,10 @@ namespace Enyim.Caching
         {
             return PerformMultiGet<object>(keys, (mget, kvp) => this.transcoder.Deserialize(kvp.Value));
         }
+        public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
+        {
+            return PerformMultiGet<T>(keys, (mget, kvp) => this.transcoder.Deserialize<T>(kvp.Value));
+        }
 
         public IDictionary<string, CasResult<object>> GetWithCas(IEnumerable<string> keys)
         {
@@ -949,6 +968,14 @@ namespace Enyim.Caching
             });
         }
 
+        public IDictionary<string, CasResult<T>> GetWithCas<T>(IEnumerable<string> keys)
+        {
+            return PerformMultiGet<CasResult<T>>(keys, (mget, kvp) => new CasResult<T>
+            {
+                Result = this.transcoder.Deserialize<T>(kvp.Value),
+                Cas = mget.Cas[kvp.Key]
+            });
+        }
         protected virtual IDictionary<string, T> PerformMultiGet<T>(IEnumerable<string> keys, Func<IMultiGetOperation, KeyValuePair<string, CacheItem>, T> collector)
         {
             // transform the keys and index them by hashed => original

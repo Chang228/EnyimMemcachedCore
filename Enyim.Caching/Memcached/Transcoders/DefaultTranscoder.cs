@@ -7,6 +7,7 @@ using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Enyim.Caching.Memcached
 {
@@ -163,8 +164,8 @@ namespace Enyim.Caching.Memcached
                 // backward compatibility
                 // earlier versions serialized decimals with TypeCode.Decimal
                 // even though they were saved by BinaryFormatter
-                case TypeCode.Decimal:
-                //case TypeCode.Object: return this.DeserializeObject(data);
+                case TypeCode.Object: return this.DeserializeJObject(data);
+                case TypeCode.Decimal: 
                 default: throw new InvalidOperationException("Unknown TypeCode was returned: " + code);
             }
         }
@@ -332,18 +333,28 @@ namespace Enyim.Caching.Memcached
             return (SByte)data.Array[data.Offset];
         }
 
+        private JsonSerializer serializer = new JsonSerializer();
         protected virtual object DeserializeObject(ArraySegment<byte> value)
         {
             using (var ms = new MemoryStream(value.Array, value.Offset, value.Count))
             {
                 using (BsonReader reader = new BsonReader(ms))
                 {
-                    JsonSerializer serializer = new JsonSerializer();
                     return serializer.Deserialize(reader);
                 }
             }
         }
 
+        protected virtual JObject DeserializeJObject(ArraySegment<byte> value)
+        {
+            using (var ms = new MemoryStream(value.Array, value.Offset, value.Count))
+            {
+                using (BsonReader reader = new BsonReader(ms))
+                {
+                    return serializer.Deserialize<JObject>(reader);
+                }
+            }
+        }
         #endregion
     }
 }
